@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f2eb">
+  <title>SMOG · woorden indelen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f4f2eb;
+      --ink: #242b28;
+      --muted: #737b75;
+      --line: #dedfd6;
+      --white: #fffefa;
+      --green: #2d6655;
+      --green-soft: #e2eee7;
+      --coral: #c86a51;
+      --coral-soft: #f4e3dc;
+      --blue: #547a91;
+      --blue-soft: #e3edf1;
+      --shadow: 0 2px 8px rgb(34 43 39 / 7%);
+      font-family: "DM Sans", "Segoe UI", sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; background: var(--paper); color: var(--ink); }
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    .topline { height: 5px; background: linear-gradient(90deg, var(--green) 0 42%, #d7a24e 42% 70%, var(--coral) 70%); }
+    .shell { max-width: 1500px; margin: 0 auto; padding: 0 32px 28px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 25px 0 22px; border-bottom: 1px solid var(--line); }
+    .brand { display: flex; align-items: center; gap: 13px; min-width: 0; }
+    .brand-mark { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 50%; background: var(--green); color: white; font-family: Georgia, serif; font-size: 19px; }
+    .eyebrow { margin: 0 0 3px; color: var(--green); font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
+    h1 { margin: 0; font-family: "Newsreader", Georgia, serif; font-size: 28px; font-weight: 500; line-height: 1.05; }
+    .header-meta { display: flex; align-items: center; gap: 11px; color: var(--muted); font-size: 13px; white-space: nowrap; }
+    .save-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+
+    .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 0 21px; }
+    .search-wrap { position: relative; flex: 1 1 300px; max-width: 420px; }
+    .search-wrap span { position: absolute; top: 50%; left: 13px; transform: translateY(-50%); color: var(--muted); font-size: 16px; }
+    .search-wrap input { width: 100%; height: 42px; padding: 0 14px 0 39px; border: 1px solid var(--line); border-radius: 5px; outline: none; background: var(--white); }
+    .search-wrap input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgb(45 102 85 / 12%); }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .quiet-button { min-height: 38px; padding: 0 12px; border: 1px solid var(--line); border-radius: 4px; background: transparent; cursor: pointer; font-size: 12px; font-weight: 600; }
+    .quiet-button:hover { border-color: #9da69f; background: rgb(255 254 250 / 65%); }
+    .quiet-button:focus-visible, select:focus-visible, .source-button:focus-visible, .modal-close:focus-visible { outline: 3px solid rgb(45 102 85 / 35%); outline-offset: 2px; }
+    #import-file { display: none; }
+
+    .intro { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 20px; margin: 0 0 14px; }
+    .intro p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .results { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+    .board { display: grid; grid-template-columns: 1fr; gap: 14px; align-items: start; }
+    .tier { min-width: 0; border: 1px solid var(--line); border-top: 4px solid var(--green); border-radius: 5px; background: rgb(255 254 250 / 54%); transition: background-color 140ms ease, border-color 140ms ease; }
+    .tier[data-tier="useful"] { border-top-color: #d3a048; }
+    .tier[data-tier="later"] { border-top-color: var(--coral); }
+    .tier.drag-over { border-color: var(--green); background: #eaf1eb; }
+    .tier-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 15px 15px 12px; }
+    .tier-head h2 { margin: 0; font-family: "Newsreader", Georgia, serif; font-size: 21px; font-weight: 500; }
+    .tier-head p { margin: 4px 0 0; color: var(--muted); font-size: 11px; line-height: 1.4; }
+    .count { display: grid; min-width: 28px; height: 28px; padding: 0 7px; place-items: center; border-radius: 99px; background: var(--green-soft); color: var(--green); font-size: 12px; font-weight: 700; }
+    [data-tier="useful"] .count { background: #f3ead4; color: #80621f; }
+    [data-tier="later"] .count { background: var(--coral-soft); color: #98513e; }
+    .word-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 7px; min-height: 90px; padding: 0 9px 10px; }
+    .word-card { display: flex; align-items: center; gap: 8px; min-height: 60px; padding: 8px; border: 1px solid #e6e5dd; border-radius: 4px; background: var(--white); box-shadow: var(--shadow); cursor: grab; }
+    .word-card:active { cursor: grabbing; }
+    .word-card.dragging { opacity: .42; }
+    .word-image { flex: 0 1 150px; width: 150px; min-width: 0; height: 200px; border: 1px solid #ecebe4; background: #fff; object-fit: contain; }
+    .word-info { flex: 1; min-width: 0; }
+    .word-info h3 { margin: 0; overflow-wrap: anywhere; font-size: 13px; font-weight: 700; line-height: 1.35; }
+    .word-info p { margin: 3px 0 0; color: var(--muted); font-size: 11px; line-height: 1.35; }
+    .word-controls { display: flex; flex: 0 0 69px; flex-direction: column; align-items: stretch; gap: 6px; }
+    .source-button { min-height: 30px; padding: 0 7px; border: 0; border-radius: 3px; background: #f1f0e9; color: #53635b; cursor: pointer; font-size: 10px; font-weight: 700; white-space: nowrap; }
+    .source-button:hover { background: var(--green-soft); color: var(--green); }
+    .move-select { width: 100%; height: 32px; padding: 0 3px; border: 1px solid var(--line); border-radius: 3px; background: white; color: var(--muted); cursor: pointer; font-size: 10px; }
+    .move-select option { font-size: 13px; }
+    .empty { margin: 4px 2px; padding: 18px 10px; color: var(--muted); text-align: center; font-size: 12px; }
+    .footnote { display: flex; align-items: center; gap: 8px; margin: 16px 2px 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .footnote strong { color: var(--ink); }
+
+    dialog { width: min(1050px, calc(100vw - 28px)); height: min(84vh, 850px); padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--white); color: var(--ink); box-shadow: 0 18px 70px rgb(20 30 25 / 30%); }
+    dialog::backdrop { background: rgb(26 33 30 / 62%); }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 58px; padding: 10px 15px; border-bottom: 1px solid var(--line); }
+    .modal-head h2 { margin: 0; font-family: "Newsreader", Georgia, serif; font-size: 19px; font-weight: 500; }
+    .modal-close { min-height: 34px; padding: 0 10px; border: 1px solid var(--line); border-radius: 4px; background: white; cursor: pointer; font-size: 12px; }
+    .source-frame { display: block; width: 100%; height: calc(100% - 58px); border: 0; background: #e6e5df; }
+
+    @media (max-width: 980px) { .shell { padding-right: 20px; padding-left: 20px; } }
+    @media (max-width: 650px) {
+      .shell { padding: 0 14px 22px; }
+      header { align-items: flex-start; padding: 18px 0 15px; }
+      .brand-mark { width: 37px; height: 37px; }
+      h1 { font-size: 24px; }
+      .header-meta { gap: 7px; padding-top: 3px; font-size: 11px; }
+      .toolbar { align-items: stretch; padding: 14px 0 17px; }
+      .search-wrap { flex-basis: 100%; max-width: none; }
+      .actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .quiet-button { padding: 0 8px; font-size: 11px; }
+      .board { grid-template-columns: 1fr; gap: 11px; }
+      .word-list { grid-template-columns: 1fr; }
+      .tier-head { padding: 13px 13px 10px; }
+      .word-list { padding: 0 8px 8px; }
+      .word-card { min-height: 58px; }
+      .footnote { align-items: flex-start; }
+      dialog { height: 88vh; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <div class="topline" aria-hidden="true"></div>
+  <main class="shell">
+    <header>
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">S</div>
+        <div>
+          <p class="eyebrow">SMOG · basiswoordenlijst</p>
+          <h1>Woorden om samen te oefenen</h1>
+        </div>
+      </div>
+      <div class="header-meta"><span class="save-dot" aria-hidden="true"></span><span id="save-status" aria-live="polite">Automatisch bewaard</span></div>
+    </header>
+
+    <section class="toolbar" aria-label="Woorden beheren">
+      <label class="search-wrap"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Zoek een woord…" aria-label="Zoek in de woordenlijst"></label>
+      <div class="actions">
+        <button class="quiet-button" id="undo-button" type="button" title="Laatste verplaatsing ongedaan maken">Ongedaan maken</button>
+        <button class="quiet-button" id="reset-button" type="button">Startindeling herstellen</button>
+        <button class="quiet-button" id="export-button" type="button">Download indeling</button>
+        <button class="quiet-button" id="import-button" type="button">Indeling openen</button>
+        <input id="import-file" type="file" accept="application/json,.json">
+      </div>
+    </section>
+
+    <div class="intro">
+      <p>Een eerste, persoonlijke inschatting voor dagelijks contact met een kindje van 1 jaar. Sleep woorden naar een ander niveau, of gebruik het keuzemenu op een kaartje.</p>
+      <span class="results" id="results-count"></span>
+    </div>
+
+    <section class="board" id="board" aria-label="SMOG-woorden per niveau"></section>
+    <p class="footnote"><strong>Bron:</strong> uitsluitend <em>SMOG_woordenlijst_basis.pdf</em>. Open bij een woord de bronpagina voor het gebaar en de oorspronkelijke gedrukte en handgeschreven onderschriften.</p>
+  </main>
+
+  <dialog id="source-dialog" aria-labelledby="source-title">
+    <div class="modal-head"><h2 id="source-title">Bronpagina</h2><button class="modal-close" id="close-source" type="button">Sluiten</button></div>
+    <iframe class="source-frame" id="source-frame" title="Originele SMOG-bronpagina"></iframe>
+  </dialog>
+
+  <script>
+    const tiers = [
+      { id: "essential", title: "1 · Absolute essentie", subtitle: "Eerst nodig in dagelijkse routines" },
+      { id: "useful", title: "2 · Nuttig", subtitle: "Handig om daarna uit te breiden" },
+      { id: "later", title: "3 · Minder relevant", subtitle: "Minder vaak nodig in jullie dag" }
+    ];
+
+    // Labels and page references come only from SMOG_woordenlijst_basis.pdf.
+    const initialWords = [
+      { id: "aardappel", label: "aardappel", page: 1, tier: "essential" },
+      { id: "afblijven", label: "afblijven", page: 1, tier: "useful" },
+      { id: "afruimen", label: "afruimen / opruimen", page: 1, tier: "useful" },
+      { id: "auto", label: "auto", page: 1, tier: "useful" },
+      { id: "avond", label: "avond", page: 1, tier: "useful" },
+      { id: "bal", label: "bal", page: 1, tier: "essential" },
+      { id: "bang", label: "bang", page: 1, tier: "useful" },
+      { id: "blij", label: "blij", page: 1, tier: "useful" },
+      { id: "boek", label: "boek", page: 1, tier: "useful" },
+      { id: "boos", label: "boos", page: 1, tier: "useful" },
+      { id: "bord", label: "bord", page: 1, tier: "useful" },
+      { id: "boter", label: "boter", page: 1, tier: "essential" },
+      { id: "braaf", label: "braaf", page: 1, tier: "later" },
+      { id: "broek", label: "broek", page: 2, tier: "useful" },
+      { id: "broer", label: "broer", page: 2, tier: "useful" },
+      { id: "brood", label: "brood / boterham", page: 2, tier: "essential" },
+      { id: "chocolade", label: "chocolade", page: 2, tier: "later" },
+      { id: "cola", label: "cola", page: 2, tier: "later" },
+      { id: "confituur", label: "confituur / jam", page: 2, tier: "useful" },
+      { id: "dank-u", label: "dank u", page: 2, tier: "useful" },
+      { id: "douchen", label: "douchen", page: 2, tier: "essential" },
+      { id: "drinken", label: "drinken", page: 2, tier: "essential" },
+      { id: "eten", label: "eten", page: 2, tier: "essential" },
+      { id: "feestje", label: "feestje", page: 3, tier: "later" },
+      { id: "fiets", label: "fiets", page: 3, tier: "useful" },
+      { id: "frieten", label: "frieten", page: 3, tier: "useful" },
+      { id: "fruit", label: "fruit", page: 3, tier: "essential" },
+      { id: "gebaar", label: "gebaar", page: 3, tier: "later" },
+      { id: "gevaarlijk", label: "gevaarlijk / pas op", page: 3, tier: "useful" },
+      { id: "enkel", label: "enkel", page: 3, tier: "later" },
+      { id: "goed", label: "goed", page: 3, tier: "useful" },
+      { id: "graag", label: "graag", page: 3, tier: "useful" },
+      { id: "groenten", label: "groenten", page: 3, tier: "essential" },
+      { id: "huis", label: "huis", page: 3, tier: "useful" },
+      { id: "helpen", label: "helpen", page: 3, tier: "essential" },
+      { id: "hond", label: "hond", page: 3, tier: "useful" },
+      { id: "huilen", label: "huilen / verdrietig", page: 3, tier: "useful" },
+      { id: "jas", label: "jas (aan- / uitdoen)", page: 4, tier: "useful" },
+      { id: "kat", label: "kat", page: 4, tier: "useful" },
+      { id: "knuffel", label: "knuffel", page: 4, tier: "essential" },
+      { id: "koekje", label: "koekje", page: 4, tier: "useful" },
+      { id: "koffie", label: "koffie", page: 4, tier: "later" },
+      { id: "koud", label: "koud", page: 4, tier: "useful" },
+      { id: "kopje", label: "kopje / glas / beker", page: 4, tier: "essential" },
+      { id: "luier", label: "luier / pamper", page: 4, tier: "essential" },
+      { id: "luisteren", label: "luisteren", page: 4, tier: "useful" },
+      { id: "mama", label: "mama", page: 5, tier: "essential" },
+      { id: "melk", label: "melk", page: 5, tier: "essential" },
+      { id: "mes", label: "mes", page: 5, tier: "later" },
+      { id: "morgen", label: "morgen / ochtend", page: 5, tier: "useful" },
+      { id: "moe", label: "moe", page: 5, tier: "essential" },
+      { id: "mooi", label: "mooi", page: 5, tier: "useful" },
+      { id: "muziek", label: "muziek", page: 5, tier: "useful" },
+      { id: "nat", label: "nat", page: 5, tier: "useful" },
+      { id: "neen", label: "neen / niet / geen", page: 5, tier: "essential" },
+      { id: "nog", label: "nog", page: 5, tier: "essential" },
+      { id: "oma-opa", label: "oma / opa", page: 5, tier: "essential" },
+      { id: "oud", label: "oud", page: 5, tier: "later" },
+      { id: "papa", label: "papa", page: 6, tier: "essential" },
+      { id: "pijn", label: "pijn", page: 6, tier: "essential" },
+      { id: "pil", label: "pil", page: 6, tier: "later" },
+      { id: "slapen", label: "slapen (bed)", page: 6, tier: "essential" },
+      { id: "snoep", label: "snoep", page: 6, tier: "later" },
+      { id: "soep", label: "soep", page: 6, tier: "essential" },
+      { id: "spaghetti", label: "spaghetti", page: 6, tier: "later" },
+      { id: "spelen", label: "spelen", page: 6, tier: "essential" },
+      { id: "regen", label: "regen", page: 6, tier: "useful" },
+      { id: "sorry", label: "sorry", page: 6, tier: "useful" },
+      { id: "suiker", label: "suiker", page: 6, tier: "later" },
+      { id: "spreken", label: "spreken", page: 6, tier: "useful" },
+      { id: "tafel", label: "tafel", page: 7, tier: "useful" },
+      { id: "tablet", label: "tablet", page: 7, tier: "later" },
+      { id: "tanden", label: "tanden poetsen", page: 7, tier: "useful" },
+      { id: "thee", label: "thee", page: 7, tier: "later" },
+      { id: "tijd", label: "tijd / horloge", page: 7, tier: "later" },
+      { id: "toilet", label: "toilet", page: 7, tier: "useful" },
+      { id: "vis", label: "vis", page: 7, tier: "useful" },
+      { id: "tv", label: "tv", page: 7, tier: "later" },
+      { id: "vlees", label: "vlees", page: 7, tier: "essential" },
+      { id: "vriend", label: "vriend", page: 7, tier: "useful" },
+      { id: "vuil", label: "vuil", page: 7, tier: "useful" },
+      { id: "waar", label: "waar", page: 7, tier: "useful" },
+      { id: "vork", label: "vork", page: 7, tier: "useful" },
+      { id: "wachten", label: "wachten (geduld)", page: 8, tier: "useful" },
+      { id: "wandelen", label: "wandelen", page: 8, tier: "useful" },
+      { id: "warm-gevoel", label: "warm (gevoel)", page: 8, tier: "useful" },
+      { id: "warm-voedsel", label: "warm (voedsel)", page: 8, tier: "useful" },
+      { id: "wassen", label: "wassen", page: 8, tier: "essential" },
+      { id: "wat", label: "wat", page: 8, tier: "useful" },
+      { id: "water", label: "water", page: 8, tier: "essential" },
+      { id: "wie", label: "wie", page: 8, tier: "useful" },
+      { id: "ziek", label: "ziek", page: 8, tier: "essential" },
+      { id: "zien", label: "zien / zoeken", page: 8, tier: "useful" },
+      { id: "zingen", label: "zingen", page: 9, tier: "useful" },
+      { id: "klok", label: "klok", page: 9, tier: "later" },
+      { id: "meel", label: "meel", page: 9, tier: "later" },
+      { id: "pink", label: "pink", page: 9, tier: "later" },
+      { id: "zitten", label: "zitten", page: 9, tier: "useful" },
+      { id: "zon", label: "zon", page: 9, tier: "useful" },
+      { id: "zus", label: "zus", page: 9, tier: "essential" }
+    ];
+
+    const collator = new Intl.Collator("nl", { sensitivity: "base", numeric: true });
+    const storageKey = "smog-basis-indeling-v1";
+    const board = document.querySelector("#board");
+    const search = document.querySelector("#search");
+    const dialog = document.querySelector("#source-dialog");
+    const sourceFrame = document.querySelector("#source-frame");
+    const undoStack = [];
+    let words = loadWords();
+    let draggedId = null;
+
+    function loadWords() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey));
+        if (Array.isArray(saved)) {
+          const placements = new Map(saved.map(item => [item.id, item.tier]));
+          return initialWords.map(word => ({ ...word, tier: tiers.some(tier => tier.id === placements.get(word.id)) ? placements.get(word.id) : word.tier }));
+        }
+      } catch (error) {
+        localStorage.removeItem(storageKey);
+      }
+      return initialWords.map(word => ({ ...word }));
+    }
+
+    function saveWords() {
+      localStorage.setItem(storageKey, JSON.stringify(words.map(({ id, tier }) => ({ id, tier }))));
+      document.querySelector("#save-status").textContent = "Automatisch bewaard";
+    }
+
+    function escapeHTML(value) {
+      return value.replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
+    }
+
+    function render() {
+      const query = search.value.trim().toLocaleLowerCase("nl");
+      const visibleCount = words.filter(word => word.label.toLocaleLowerCase("nl").includes(query)).length;
+      document.querySelector("#results-count").textContent = `${visibleCount} van ${words.length} woorden`;
+      board.innerHTML = tiers.map(tier => {
+        const items = words.filter(word => word.tier === tier.id && word.label.toLocaleLowerCase("nl").includes(query)).sort((a, b) => collator.compare(a.label, b.label));
+        const cards = items.map(word => `
+            <article class="word-card" draggable="true" data-id="${word.id}" aria-label="${escapeHTML(word.label)}, niveau ${tiers.findIndex(item => item.id === word.tier) + 1}">
+            <img class="word-image" src="assets/words/${word.id}.jpg" alt="SMOG-gebaar, gedrukte titel en handgeschreven uitleg bij ${escapeHTML(word.label)}" loading="lazy">
+            <div class="word-controls">
+              <button class="source-button" type="button" data-source="${word.page}" aria-label="Bekijk bronpagina ${word.page} voor ${escapeHTML(word.label)}">Bron · p.${word.page}</button>
+              <select class="move-select" data-move="${word.id}" aria-label="Verplaats ${escapeHTML(word.label)} naar een ander niveau" title="Verplaats naar niveau">
+                <option value="" selected>Verplaats…</option>
+                ${tiers.filter(item => item.id !== word.tier).map(item => `<option value="${item.id}">${item.title}</option>`).join("")}
+              </select>
+            </div>
+          </article>`).join("");
+        return `<section class="tier" data-tier="${tier.id}" aria-label="${tier.title}">
+          <div class="tier-head"><div><h2>${tier.title}</h2><p>${tier.subtitle}</p></div><span class="count">${items.length}</span></div>
+          <div class="word-list">${cards || `<p class="empty">${query ? "Geen treffers in dit niveau" : "Sleep hier woorden naartoe"}</p>`}</div>
+        </section>`;
+      }).join("");
+      board.querySelectorAll(".word-card").forEach(card => {
+        card.addEventListener("dragstart", event => {
+          draggedId = card.dataset.id;
+          card.classList.add("dragging");
+          event.dataTransfer.effectAllowed = "move";
+          event.dataTransfer.setData("text/plain", draggedId);
+        });
+        card.addEventListener("dragend", () => card.classList.remove("dragging"));
+      });
+      board.querySelectorAll(".tier").forEach(section => {
+        section.addEventListener("dragover", event => { event.preventDefault(); section.classList.add("drag-over"); });
+        section.addEventListener("dragleave", event => { if (!section.contains(event.relatedTarget)) section.classList.remove("drag-over"); });
+        section.addEventListener("drop", event => {
+          event.preventDefault();
+          section.classList.remove("drag-over");
+          moveWord(event.dataTransfer.getData("text/plain") || draggedId, section.dataset.tier);
+        });
+      });
+      board.querySelectorAll("[data-move]").forEach(select => select.addEventListener("change", () => {
+        if (select.value) moveWord(select.dataset.move, select.value);
+      }));
+      board.querySelectorAll("[data-source]").forEach(button => button.addEventListener("click", () => openSource(Number(button.dataset.source))));
+    }
+
+    function moveWord(id, tier) {
+      const word = words.find(item => item.id === id);
+      if (!word || !tiers.some(item => item.id === tier) || word.tier === tier) return;
+      undoStack.push(words.map(item => ({ id: item.id, tier: item.tier })));
+      if (undoStack.length > 40) undoStack.shift();
+      word.tier = tier;
+      saveWords();
+      render();
+    }
+
+    function openSource(page) {
+      document.querySelector("#source-title").textContent = `SMOG_woordenlijst_basis.pdf · pagina ${page}`;
+      sourceFrame.src = `SMOG_woordenlijst_basis.pdf#page=${page}&zoom=page-fit`;
+      dialog.showModal();
+    }
+
+    search.addEventListener("input", render);
+    document.querySelector("#close-source").addEventListener("click", () => dialog.close());
+    dialog.addEventListener("close", () => { sourceFrame.src = "about:blank"; });
+    document.querySelector("#undo-button").addEventListener("click", () => {
+      const previous = undoStack.pop();
+      if (!previous) return;
+      const placements = new Map(previous.map(item => [item.id, item.tier]));
+      words.forEach(word => { word.tier = placements.get(word.id) || word.tier; });
+      saveWords();
+      render();
+    });
+    document.querySelector("#reset-button").addEventListener("click", () => {
+      if (!window.confirm("De startindeling terugzetten? Je huidige indeling wordt vervangen.")) return;
+      undoStack.push(words.map(item => ({ id: item.id, tier: item.tier })));
+      words = initialWords.map(word => ({ ...word }));
+      saveWords();
+      render();
+    });
+    document.querySelector("#export-button").addEventListener("click", () => {
+      const file = new Blob([JSON.stringify({ version: 1, source: "SMOG_woordenlijst_basis.pdf", words: words.map(({ id, tier }) => ({ id, tier })) }, null, 2)], { type: "application/json" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(file);
+      link.download = "smog-indeling.json";
+      link.click();
+      URL.revokeObjectURL(link.href);
+    });
+    document.querySelector("#import-button").addEventListener("click", () => document.querySelector("#import-file").click());
+    document.querySelector("#import-file").addEventListener("change", async event => {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        const imported = JSON.parse(await file.text());
+        const placements = new Map((Array.isArray(imported) ? imported : imported.words).map(item => [item.id, item.tier]));
+        if (![...placements.values()].every(value => tiers.some(tier => tier.id === value))) throw new Error("Ongeldige niveaus");
+        undoStack.push(words.map(item => ({ id: item.id, tier: item.tier })));
+        words = initialWords.map(word => ({ ...word, tier: placements.get(word.id) || word.tier }));
+        saveWords();
+        render();
+      } catch (error) {
+        window.alert("Dit bestand bevat geen geldige SMOG-indeling.");
+      }
+      event.target.value = "";
+    });
+
+    render();
+  </script>
+</body>
+</html>

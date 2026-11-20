@@ -1,0 +1,12 @@
+{
+  "name": "smog-project",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare:cards": "node tools/render-cards.mjs"
+  },
+  "devDependencies": {
+    "@napi-rs/canvas": "^1.1.1",
+    "pdfjs-dist": "^6.5.438"
+  }
+}
